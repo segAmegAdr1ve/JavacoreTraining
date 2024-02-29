@@ -2,8 +2,16 @@ package com.example.user.javacoretraining.collections;
 
 import android.support.annotation.NonNull;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 /**
  * Набор тренингов по работе со строками в java.
@@ -27,8 +35,26 @@ public class CollectionsBlock<T extends Comparable> {
      * @throws NullPointerException если один из параметров null
      */
     public List<T> collectionTask0(@NonNull List<T> firstList, @NonNull List<T> secondList) {
-        //TODO: implement it
-        return Collections.emptyList();
+        List<T> mergedList = new ArrayList<>();
+        int i = 0;
+        int j = 0;
+        while (i < firstList.size() && j < secondList.size()) {
+            if (firstList.get(i).compareTo(secondList.get(j)) >= 0) {
+                mergedList.add(firstList.get(i));
+                i++;
+            }
+            else {
+                mergedList.add(secondList.get(j));
+                j++;
+            }
+        }
+        if (i == firstList.size()) {
+            mergedList.addAll(secondList.subList(j, secondList.size()));
+        }
+        else {
+            mergedList.addAll(firstList.subList(i, firstList.size()));
+        }
+        return mergedList;
     }
 
     /**
@@ -39,8 +65,12 @@ public class CollectionsBlock<T extends Comparable> {
      * @throws NullPointerException если один из параметров null
      */
     public List<T> collectionTask1(@NonNull List<T> inputList) {
-        //TODO: implement it
-        return Collections.emptyList();
+        List<T> outputList = new ArrayList<>();
+        for (int i = 0; i < inputList.size(); i++) {
+            outputList.add(inputList.get(i));
+            outputList.addAll(inputList.subList(0, i ));
+        }
+        return outputList;
     }
 
     /**
@@ -52,8 +82,9 @@ public class CollectionsBlock<T extends Comparable> {
      * @throws NullPointerException если один из параметров null
      */
     public boolean collectionTask2(@NonNull List<T> firstList, @NonNull List<T> secondList) {
-        //TODO: implement it
-        return true;
+        Set<T> firstSet = new HashSet<>(firstList);
+        Set<T> secondSet = new HashSet<>(secondList);
+        return firstSet.equals(secondSet);
     }
 
     /**
@@ -68,8 +99,24 @@ public class CollectionsBlock<T extends Comparable> {
      * @throws NullPointerException если один из параметров null
      */
     public List<T> collectionTask3(@NonNull List<T> inputList, int n) {
-        //TODO: implement it
-        return Collections.emptyList();
+        if (inputList.isEmpty() || n == 0) {
+            return inputList;
+        }
+        int size = inputList.size();
+        int absN = Math.abs(n);
+        if (absN > size) {
+            absN = absN % size;
+        }
+        List<T> outputList = new ArrayList<>(size);
+        if (n > 0) {
+            outputList.addAll(inputList.subList(size - absN, size));
+            outputList.addAll(inputList.subList(0, size - absN));
+        }
+        else {
+            outputList.addAll(inputList.subList(absN, size));
+            outputList.addAll(inputList.subList(0, absN));
+        }
+        return outputList;
     }
 
     /**
@@ -84,8 +131,15 @@ public class CollectionsBlock<T extends Comparable> {
      */
     public List<String> collectionTask4(@NonNull List<String> inputList, @NonNull String a,
                                         @NonNull String b) {
-        //TODO: implement it
-        return Collections.emptyList();
+        List<String> outputList = new ArrayList<>();
+        for (String element : inputList) {
+            if (element.equals(a)) {
+                outputList.add(b);
+            } else {
+                outputList.add(element);
+            }
+        }
+        return outputList;
     }
 
     /*
@@ -98,4 +152,147 @@ public class CollectionsBlock<T extends Comparable> {
       Определите самого старшего студента и самого младшего студентов.
       Для каждой группы найдите лучшего с точки зрения успеваемости студента.
      */
+    static final int MAX_GROUP = 2;
+    public static List<Student> sortByCourseAndName(List<Student> inputList) {
+        boolean swapped = true;
+        while (swapped) {
+            swapped = false;
+            for (int i = 0; i < inputList.size() - 1; i++) {
+                Student current = inputList.get(i);
+                Student next = inputList.get(i + 1);
+                if (current.course == next.course) {
+                    if (current.firstName.compareTo(next.firstName) > 0) {
+                        inputList.set(i, next);
+                        inputList.set(i + 1, current);
+                        swapped = true;
+                    }
+                } else if (current.course > next.course) {
+                    inputList.set(i, next);
+                    inputList.set(i + 1, current);
+                    swapped = true;
+                }
+            }
+        }
+        return inputList;
+    }
+
+    public static Map<Integer, Map<Subject, Double>> computeAverageGrade(List<Student> inputList) {
+        Map<Integer, Map<Subject, Double>> averageGradeMap = new HashMap<>();
+        for (int i = 1; i < MAX_GROUP + 1; i++) {
+            Map<Subject, Double> subjectToGradeMap = new HashMap<>();
+            int studentsCount = 0;
+            for (Student student : inputList) {
+                if (student.groupNumber == i) {
+                    for (Subject subject : Subject.values()) {
+                        if (subjectToGradeMap.get(subject) == null) {
+                            subjectToGradeMap.put(subject, student.subjectGrades.get(subject).doubleValue());
+                        } else {
+                            subjectToGradeMap.put(subject, subjectToGradeMap.get(subject) +
+                                    student.subjectGrades.get(subject).doubleValue());
+                        }
+                    }
+                    studentsCount++;
+                }
+            }
+            for (Subject subject: Subject.values()) {
+                subjectToGradeMap.put(subject, subjectToGradeMap.get(subject) / studentsCount);
+            }
+            averageGradeMap.put(i, subjectToGradeMap);
+        }
+        return averageGradeMap;
+    }
+
+    public static Student findOldest(List<Student> inputList) {
+        Student oldestStudent = inputList.get(0);
+        for (Student student : inputList) {
+            if (student.yearOfBirth < oldestStudent.yearOfBirth) {
+                oldestStudent = student;
+            }
+        }
+        return oldestStudent;
+    }
+    public static Student findYoungest(List<Student> inputList) {
+        Student youngestStudent = inputList.get(0);
+        for (Student student : inputList) {
+            if (student.yearOfBirth > youngestStudent.yearOfBirth) {
+                youngestStudent = student;
+            }
+        }
+        return youngestStudent;
+    }
+
+    public static Map<Integer, Student> findBestStudent(List<Student> inputList) {
+        Map<Integer, Student> groupToBestStudent = new HashMap<>();
+        Student bestStudent = null;
+        int maxGradeSum;
+        int gradeSum;
+        for (int i = 1; i < MAX_GROUP + 1; i++) {
+            maxGradeSum = 0;
+            for (Student student : inputList) {
+                if (student.groupNumber != i) continue;
+                gradeSum = 0;
+                for (Subject subject : Subject.values()) {
+                    gradeSum += student.subjectGrades.get(subject);
+                }
+                if (maxGradeSum < gradeSum) {
+                    maxGradeSum = gradeSum;
+                    bestStudent = student;
+                };
+            }
+            groupToBestStudent.put(i, bestStudent);
+        }
+        return groupToBestStudent;
+    }
 }
+class Student {
+    Student(String firstName, String lastName,
+            String patronymic, int yearOfBirth,
+            int course, int groupNumber,
+            HashMap<Subject,Integer> subjectGrades) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.patronymic = patronymic;
+        this.yearOfBirth = yearOfBirth;
+        this.course = course;
+        this.groupNumber = groupNumber;
+        this.subjectGrades = subjectGrades;
+    }
+    String firstName;
+    String lastName;
+    String patronymic;
+    int yearOfBirth;
+    int course;
+    int groupNumber;
+    HashMap<Subject,Integer> subjectGrades;
+
+}
+class StudentListBuilder {
+    List<String> names = Arrays.asList("James", "John","Robert", "Michael",
+            "William", "David", "Richard", "Joseph", "Charles", "Thomas");
+    Random random = new Random();
+    public ArrayList<Student> getStudentsList(int listSize) {
+        ArrayList<Student> studentsList = new ArrayList<>(listSize);
+
+        for (int i = 0; i < listSize; i++) {
+            HashMap<Subject,Integer> subjectGrades = new HashMap<>(5);
+            for (Subject subject: Subject.values()) {
+                subjectGrades.put(subject, random.nextInt(5) + 1);
+            }
+            studentsList.add(new Student(
+                    names.get(random.nextInt(names.size())),
+                    "M",
+                    "J",
+                    random.nextInt(41) + 1970,
+                    random.nextInt(4) + 1,
+                    random.nextInt(CollectionsBlock.MAX_GROUP) + 1,
+                    subjectGrades
+            ));
+        }
+        return studentsList;
+    }
+}
+enum Subject { A,B,C,D,E }
+
+
+
+
